@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+BUILD_DIR=$1
+CACHE_DIR=$2
+BIN_DIR=$(cd $(dirname $0); pwd)
+#DMD_URL=http://downloads.dlang.org.s3-website-us-east-1.amazonaws.com/releases/2013/dmd.2.063.2.zip
+EVENT2_SLUG="https://api.anvilworks.org/slugs/070b30a6-e90e-4748-a4cf-5a9335b96f19.tgz"
+function setup_dmd()
+{
+	cd $CACHE_DIR
+	version="$1"
+	curl -# "http://downloads.dlang.org.s3-website-us-east-1.amazonaws.com/releases/2013/dmd.${version}.zip" -o dmd.zip
+	$BIN_DIR/../tools/unzip dmd.zip -d $CACHE_DIR
+	rm dmd.zip
+}
+
+function setup_dub()
+{
+	version=$1
+	curl -# http://registry.vibed.org/files/dub-$version-linux-x86_64.tar.gz |tar xzf - -C $CACHE_DIR/dmd2/linux/bin64
+}
+
+echo "-----> Setting up build toolchain"
+#echo $BUILD_DIR,$CACHE_DIR
+
+if [ ! -e $CACHE_DIR/dmd2 ]; then
+	setup_dmd "2.063.2"
+	setup_dub "0.9.16"
+fi
+
+export PATH=$PATH:$CACHE_DIR/dmd2/linux/bin64
+### XXX setup self compiled package 
+#rm -rf $BUILD_DIR/vendor
+echo "-----> Setting up runtime library"
+if [ ! -e $BUILD_DIR/vendor ]; then
+	#XXX fetch precompiled library build using anvil-cli/heroku-anvil
+	# libevent2, libev,
+	cd $BUILD_DIR
+	echo "-----> downloading ${EVENT2_SLUG}"
+	curl -# -L ${EVENT2_SLUG} | tar xzf -
+fi
+
+export LD_LIBRARY_PATH=$BUILD_DIR/vendor/lib
+#export PKG_CONFIG_PATH=$BUILD_DIR/vendor/lib/pkgconfig
+
+### finally
+echo "-----> Building using DUB"
+cat template.json | sed -e "s|\${VENDOR_LIB}|${BUILD_DIR}/vendor/lib|" > package.json
+#cat package.json
+cd $BUILD_DIR && dub build -v
