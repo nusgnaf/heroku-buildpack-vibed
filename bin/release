@@ -3,6 +3,6 @@
 cat << EOF
 ---
 config_vars:
-	PATH: /app/bin:/usr/local/bin:/usr/bin:/bin
-	LD_LIBRARY_PATH: /app/vendor/lib
+  PATH: /app/bin:/usr/local/bin:/usr/bin:/bin
+  LD_LIBRARY_PATH: /app/vendor/lib
 EOF
