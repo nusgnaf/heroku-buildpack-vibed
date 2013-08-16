@@ -44,4 +44,4 @@ curl -# -L ${EV_SLUG} | tar xzf -
 echo "-----> Building using DUB"
 cat template.json | sed -e "s|\${VENDOR_LIB}|${BUILD_DIR}/vendor/lib|" > package.json
 #cat package.json
-cd $BUILD_DIR && dub build  --build=release
+cd $BUILD_DIR && dub build  --build=release --rdmd
